@@ -1,0 +1,61 @@
+--- scipy/meson.build.orig	2024-11-01 22:12:34.133408873 +0100
++++ scipy/meson.build	2024-11-01 22:15:47.354148670 +0100
+@@ -43,32 +43,12 @@
+ #   numpy-include-dir = /abspath/to/host-pythons/site-packages/numpy/core/include
+ #
+ # This uses the path as is, and avoids running the interpreter.
+-incdir_numpy = meson.get_external_property('numpy-include-dir', 'not-given')
+-if incdir_numpy == 'not-given'
+-  incdir_numpy = run_command(py3,
+-    [
+-      '-c',
+-      '''import os
+-os.chdir(os.path.join("..", "tools"))
+-import numpy as np
+-try:
+-  incdir = os.path.relpath(np.get_include())
+-except Exception:
+-  incdir = np.get_include()
+-print(incdir)
+-  '''
+-    ],
+-    check: true
+-  ).stdout().strip()
+ 
+-  # We do need an absolute path to feed to `cc.find_library` below
+-  _incdir_numpy_abs = run_command(py3,
+-    ['-c', 'import os; os.chdir(".."); import numpy; print(numpy.get_include())'],
+-    check: true
+-  ).stdout().strip()
+-else
+-  _incdir_numpy_abs = incdir_numpy
+-endif
++incdir_numpy = get_option('NUMPY_INCLUDEDIR')
++_incdir_numpy_abs = incdir_numpy
++npymath_path = get_option('NUMPY_LIBDIR')
++npyrandom_path = npymath_path.replace('core/lib', 'random/lib')
++
+ inc_np = include_directories(incdir_numpy)
+ np_dep = declare_dependency(include_directories: inc_np)
+ 
+@@ -76,8 +56,6 @@
+ inc_f2py = include_directories(incdir_f2py)
+ fortranobject_c = incdir_f2py / 'fortranobject.c'
+ 
+-npymath_path = _incdir_numpy_abs / '..' / 'lib'
+-npyrandom_path = _incdir_numpy_abs / '..' / '..' / 'random' / 'lib'
+ npymath_lib = cc.find_library('npymath', dirs: npymath_path)
+ npyrandom_lib = cc.find_library('npyrandom', dirs: npyrandom_path)
+
+--- meson_options.txt.orig	2024-11-01 22:12:43.065546927 +0100
++++ meson_options.txt	2024-11-01 22:20:44.404612313 +0100
+@@ -2,6 +2,8 @@
+         description: 'option for BLAS library switching')
+ option('lapack', type: 'string', value: 'openblas',
+         description: 'option for LAPACK library switching')
++option('NUMPY_INCLUDEDIR', type: 'string', description: 'Include directory for numpy')
++option('NUMPY_LIBDIR', type: 'string', description: 'Library directory for numpy')
+ option('use-g77-abi', type: 'boolean', value: false,
+         description: 'If set to true, forces using g77 compatibility wrappers ' +
+                      'for LAPACK functions. The default is to use gfortran ' +
+ 
