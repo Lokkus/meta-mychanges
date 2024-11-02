@@ -41,10 +41,7 @@ Copy the recipes-python/scipy folder to the appropriate layer in Yocto.
 Ensure that SRC_URI points to the location of both patches.
 
 Run the package build:
-
-bash
-Skopiuj kod
-bitbake python3-scipy
+  bitbake python3-scipy
 After the build completes, verify that the package is correctly included in the system image.
 
 
